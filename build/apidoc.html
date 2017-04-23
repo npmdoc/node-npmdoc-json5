@@ -1,0 +1,321 @@
+<div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a
+
+        href="http://json5.org/"
+
+    >json5 (v0.5.1)</a>
+</h1>
+<h4>JSON for the ES5 era.</h4>
+<div class="apidocSectionDiv"><a
+    href="#apidoc.tableOfContents"
+    id="apidoc.tableOfContents"
+><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.json5">module json5</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.json5.parse">
+            function <span class="apidocSignatureSpan">json5.</span>parse
+            <span class="apidocSignatureSpan">(source, reviver)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.json5.stringify">
+            function <span class="apidocSignatureSpan">json5.</span>stringify
+            <span class="apidocSignatureSpan">(obj, replacer, space)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.json5" id="apidoc.module.json5">module json5</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.json5.parse" id="apidoc.element.json5.parse">
+        function <span class="apidocSignatureSpan">json5.</span>parse
+        <span class="apidocSignatureSpan">(source, reviver)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">parse = function (source, reviver) {
+    var result;
+
+    text = String(source);
+    at = 0;
+    lineNumber = 1;
+    columnNumber = 1;
+    ch = &#x27; &#x27;;
+    result = value();
+    white();
+    if (ch) {
+        error(&#x22;Syntax error&#x22;);
+    }
+
+// If there is a reviver function, we recursively walk the new structure,
+// passing each name/value pair to the reviver function for possible
+// transformation, starting with a temporary root object that holds the result
+// in an empty key. If there is not a reviver function, we simply return the
+// result.
+
+    return typeof reviver === &#x27;function&#x27; ? (function walk(holder, key) {
+        var k, v, value = holder[key];
+        if (value &#x26;&#x26; typeof value === &#x27;object&#x27;) {
+            for (k in value) {
+                if (Object.prototype.hasOwnProperty.call(value, k)) {
+                    v = walk(value, k);
+                    if (v !== undefined) {
+                        value[k] = v;
+                    } else {
+                        delete value[k];
+                    }
+                }
+            }
+        }
+        return reviver.call(holder, key, value);
+    }({&#x27;&#x27;: result}, &#x27;&#x27;)) : result;
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+```html
+&#x3c;script src=&#x22;json5.js&#x22;&#x3e;&#x3c;/script&#x3e;
+```
+
+Then in both cases, you can simply replace native `JSON` calls with `JSON5`:
+
+```js
+var obj = JSON5.<span class="apidocCodeKeywordSpan">parse</span>(&#x27;{unquoted:&#x22;key&#x22;,trailing:&#x22;comma&#x22;,}&#x27
+;);
+var str = JSON5.stringify(obj);
+```
+
+`JSON5.parse` supports all of the JSON5 features listed above (*TODO: except
+Unicode*), as well as the native [`reviver` argument][json-parse].
+
+[json-parse]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.json5.stringify" id="apidoc.element.json5.stringify">
+        function <span class="apidocSignatureSpan">json5.</span>stringify
+        <span class="apidocSignatureSpan">(obj, replacer, space)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">stringify = function (obj, replacer, space) {
+    if (replacer &#x26;&#x26; (typeof(replacer) !== &#x22;function&#x22; &#x26;&#x26; !isArray(replacer))) {
+        throw new Error(&#x27;Replacer must be a function or an array&#x27;);
+    }
+    var getReplacedValueOrUndefined = function(holder, key, isTopLevel) {
+        var value = holder[key];
+
+        // Replace the value with its toJSON value first, if possible
+        if (value &#x26;&#x26; value.toJSON &#x26;&#x26; typeof value.toJSON === &#x22;function&#x22;) {
+            value = value.toJSON();
+        }
+
+        // If the user-supplied replacer if a function, call it. If it&#x27;s an array, check objects&#x27; string keys for
+        // presence in the array (removing the key/value pair from the resulting JSON if the key is missing).
+        if (typeof(replacer) === &#x22;function&#x22;) {
+            return replacer.call(holder, key, value);
+        } else if(replacer) {
+            if (isTopLevel || isArray(holder) || replacer.indexOf(key) &#x3e;= 0) {
+                return value;
+            } else {
+                return undefined;
+            }
+        } else {
+            return value;
+        }
+    };
+
+    function isWordChar(c) {
+        return (c &#x3e;= &#x27;a&#x27; &#x26;&#x26; c &#x3c;= &#x27;z&#x27;) ||
+            (c &#x3e;= &#x27;A&#x27; &#x26;&#x26; c &#x3c;= &#x27;Z&#x27;) ||
+            (c &#x3e;= &#x27;0&#x27; &#x26;&#x26; c &#x3c;= &#x27;9&#x27;) ||
+            c === &#x27;_&#x27; || c === &#x27;$&#x27;;
+    }
+
+    function isWordStart(c) {
+        return (c &#x3e;= &#x27;a&#x27; &#x26;&#x26; c &#x3c;= &#x27;z&#x27;) ||
+            (c &#x3e;= &#x27;A&#x27; &#x26;&#x26; c &#x3c;= &#x27;Z&#x27;) ||
+            c === &#x27;_&#x27; || c === &#x27;$&#x27;;
+    }
+
+    function isWord(key) {
+        if (typeof key !== &#x27;string&#x27;) {
+            return false;
+        }
+        if (!isWordStart(key[0])) {
+            return false;
+        }
+        var i = 1, length = key.length;
+        while (i &#x3c; length) {
+            if (!isWordChar(key[i])) {
+                return false;
+            }
+            i++;
+        }
+        return true;
+    }
+
+    // export for use in tests
+    JSON5.isWord = isWord;
+
+    // polyfills
+    function isArray(obj) {
+        if (Array.isArray) {
+            return Array.isArray(obj);
+        } else {
+            return Object.prototype.toString.call(obj) === &#x27;[object Array]&#x27;;
+        }
+    }
+
+    function isDate(obj) {
+        return Object.prototype.toString.call(obj) === &#x27;[object Date]&#x27;;
+    }
+
+    var objStack = [];
+    function checkForCircular(obj) {
+        for (var i = 0; i &#x3c; objStack.length; i++) {
+            if (objStack[i] === obj) {
+                throw new TypeError(&#x22;Converting circular structure to JSON&#x22;);
+            }
+        }
+    }
+
+    function makeIndent(str, num, noNewLine) {
+        if (!str) {
+            return &#x22;&#x22;;
+        }
+        // indentation no more than 10 chars
+        if (str.length &#x3e; 10) {
+            str = str.substring(0, 10);
+        }
+
+        var indent = noNewLine ? &#x22;&#x22; : &#x22;\n&#x22;;
+        for (var i = 0; i &#x3c; num; i++) {
+            indent += str;
+        }
+
+        return indent;
+    }
+
+    var indentStr;
+    if (space) {
+        if (typeof space === &#x22;string&#x22;) {
+            indentStr = space;
+        } else if (typeof space === &#x22;number&#x22; &#x26;&#x26; space &#x3e;= 0) {
+            indentStr = makeIndent(&#x22; &#x22;, space, true);
+        } else {
+            // ignore space parameter
+        }
+    }
+
+    // Copied from Crokford&#x27;s implementation of JSON
+    // See https://github.com/douglascrockford/JSON-js/blob/e39db4b7e6249f04a195e7dd0840e610cc9e941e/json2.js#L195
+    // Begin
+    var cx = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+        escapable = /[\\\&#x22;\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0
+-\uffff]/g,
+        meta = { // table of character substitutions
+        &#x27;\b&#x27;: &#x27;\\b&#x27;,
+        &#x27;\t&#x27;: &#x27;\\t&#x27;,
+        &#x27;\n&#x27;: &#x27;\\n&#x27;,
+        &#x27;\f&#x27;: &#x27;\\f&#x27;,
+        &#x27;\r&#x27;: &#x27;\\r&#x27;,
+        &#x27;&#x22;&#x27; : &#x27;\\&#x22;&#x27;,
+        &#x27;\\&#x27;: &#x27;\\\\&#x27;
+    };
+    function escapeString(string) {
+
+// If the string contains no control characters, no quote characters, and no
+// backslash characters, then we can safely slap some quotes around it.
+// Otherwise we must also replace the offending characters with safe escape
+// sequences.
+        escapable.lastIndex = 0; ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+&#x3c;script src=&#x22;json5.js&#x22;&#x3e;&#x3c;/script&#x3e;
+```
+
+Then in both cases, you can simply replace native `JSON` calls with `JSON5`:
+
+```js
+var obj = JSON5.parse(&#x27;{unquoted:&#x22;key&#x22;,trailing:&#x22;comma&#x22;,}&#x27;);
+var str = JSON5.<span class="apidocCodeKeywordSpan">stringify</span>(obj);
+```
+
+`JSON5.parse` supports all of the JSON5 features listed above (*TODO: except
+Unicode*), as well as the native [`reviver` argument][json-parse].
+
+[json-parse]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse
+...</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
